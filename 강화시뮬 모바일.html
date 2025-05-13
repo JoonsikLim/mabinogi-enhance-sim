@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>마비노기 강화 시뮬레이션</title>
+  <style>
+    body {
+      background-color: #1e1f26;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+      text-align: center;
+      padding: 40px 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background: #2e3039;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .enhance-btn {
+      background-color: #1fc67a;
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 20px;
+      padding: 12px 24px;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+    .enhance-btn:active {
+      transform: scale(0.97);
+    }
+    .progress-box {
+      background-color: #2f3441;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background-color: #1c1d23;
+      border-radius: 4px;
+      margin-top: 4px;
+      position: relative;
+    }
+    .progress-fill {
+      background-color: #ffa640;
+      height: 8px;
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    .section-title {
+      font-size: 24px;
+      margin-bottom: 12px;
+      color: #ffffff;
+    }
+    .material-section {
+      margin-top: 20px;
+    }
+    .toggle-box {
+      margin-top: 20px;
+      font-size: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+    .result-animation {
+      margin-top: 20px;
+      font-size: 20px;
+      height: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="section-title">마비노기 강화 시뮬레이션</div>
+
+    <div class="progress-box">
+      <div>강화 포인트</div>
+      <span id="point-value">0.0%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+
+    <div class="toggle-box">
+      <label for="catalyst">강화 촉매제 사용</label>
+      <input type="checkbox" id="catalyst" />
+    </div>
+
+    <button class="enhance-btn" onclick="enhance()">+1 강화하기</button>
+
+    <div class="material-section">
+      <p>강화 성공 확률: <strong id="success-rate">15%</strong></p>
+    </div>
+
+    <div class="result-animation" id="result"></div>
+  </div>
+
+  <!-- 사운드 효과 -->
+  <audio id="success-sound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+  <audio id="fail-sound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+
+  <script>
+    let enhancementLevel = 10;
+    let enhancementPoint = 0;
+
+    const rates = {
+      11: 15,
+      12: 10,
+      13: 7,
+      14: 5,
+      15: 3,
+      16: 1,
+      17: 1,
+      18: 1,
+      19: 1,
+      20: 1
+    };
+
+    function enhance() {
+      const catalystUsed = document.getElementById("catalyst").checked;
+      if (enhancementLevel >= 20) return alert("최대 강화 레벨입니다.");
+
+      let nextLevel = enhancementLevel + 1;
+      let baseRate = rates[nextLevel] || 0;
+
+      if (enhancementPoint >= 100) {
+        enhancementLevel++;
+        enhancementPoint = 0;
+        playSound("success");
+        showResult("강화 포인트로 자동 성공! +" + enhancementLevel, "#1fc67a");
+      } else {
+        let roll = Math.random() * 100;
+        let success = roll < baseRate;
+
+        if (success) {
+          enhancementLevel++;
+          enhancementPoint = 0;
+          playSound("success");
+          showResult("강화 성공! +" + enhancementLevel, "#1fc67a");
+        } else {
+          if (catalystUsed) {
+            let retryRoll = Math.random() * 100;
+            let retrySuccess = retryRoll < baseRate;
+            if (retrySuccess) {
+              enhancementLevel++;
+              enhancementPoint = 0;
+              playSound("success");
+              showResult("촉매제로 재도전 성공! +" + enhancementLevel, "#1fc67a");
+            } else {
+              enhancementPoint += baseRate;
+              playSound("fail");
+              showResult("촉매제 재도전 실패... +" + enhancementLevel, "#f55");
+            }
+          } else {
+            enhancementPoint += baseRate / 2;
+            playSound("fail");
+            showResult("강화 실패... +" + enhancementLevel, "#f55");
+          }
+        }
+      }
+
+      if (enhancementPoint > 100) enhancementPoint = 100;
+      document.getElementById("point-value").innerText = `${enhancementPoint.toFixed(1)}%`;
+      document.getElementById("progress-fill").style.width = `${enhancementPoint}%`;
+      document.getElementById("success-rate").innerText = `${baseRate}%`;
+    }
+
+    function playSound(type) {
+      const sound = document.getElementById(type === "success" ? "success-sound" : "fail-sound");
+      if (sound) {
+        sound.currentTime = 0;
+        sound.play();
+      }
+    }
+
+    function showResult(text, color) {
+      const result = document.getElementById("result");
+      result.innerText = text;
+      result.style.color = color;
+    }
+  </script>
+</body>
+</html>
